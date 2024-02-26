@@ -1,95 +1,117 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client'
+import { useState, useEffect, ChangeEvent } from "react"
+
+import Question from "./components/Question"
+import CorrectAnswer from "./components/CorrectAnswer"
+import WrongAnswer from "./components/WrongAnswer"
+import { getQuestions } from "./api/getQuestions"
+import { CurrentQuestion, Album, FormValues } from "./app.interface"
+import { getCurrentQuestion } from "./utils/getCurrentQuestion"
+import { Box, Page, Heading } from "./app.styled"
+import SignIn from "./components/SignIn"
 
 export default function Home() {
+  const [loading, setLoading] = useState<boolean>(false)
+  const [allAlbums, setAllAlbums] = useState<Album[] | null>(null)
+  const [question, setQuestion] = useState<CurrentQuestion | null>(null)
+  const [guess, setGuess] = useState<'correct' | 'wrong' | 'unset'>('unset')
+  const [answeredQuestions, setAnsweredQuestions] = useState<number[]>([])
+  const [gameOver, setGameOver] = useState<boolean>(false)
+  const [user, setUser] = useState<string | null>(null)
+  const [formValues, setFormValues] = useState<FormValues>({
+    userName: '',
+    email: ''
+  })
+
+  useEffect(() => {
+    (async () => {
+      const albums = await getQuestions()
+      // This should be for some error handling
+      if (albums == null || typeof albums === 'string') {
+        return
+      }
+      setAllAlbums(albums)
+    })()
+  }, [])
+
+  useEffect(() => {
+    if (answeredQuestions.length === allAlbums?.length) {
+      setGuess('unset')
+      setGameOver(true)
+      setAnsweredQuestions([])
+      setQuestion(null)
+    }
+  }, [answeredQuestions])
+
+
+  const nextQuestion = () => {
+    setGuess('unset')
+    setLoading(true)
+
+    const currentQuestion = getCurrentQuestion(allAlbums!, answeredQuestions)
+    setLoading(false)
+    setQuestion(currentQuestion)
+  }
+
+  const startGame = () => {
+    nextQuestion()
+  }
+
+  const handleGuess = (guessId: number) => {
+    if (guessId === question?.correctAnswer.cover_image_id) {
+      setGuess('correct')
+      setAnsweredQuestions([...answeredQuestions, question?.correctAnswer.cover_image_id])
+      return
+    }
+    setGuess('wrong')
+  }
+
+  const handleFormChange = (name: string, event: ChangeEvent<HTMLInputElement>) => {
+    setFormValues({ ...formValues, [name]: event.target.value })
+  }
+
+  const handleFormSubmit = () => {
+    setUser(formValues.userName)
+    startGame()
+  }
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.tsx</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <Page>
+      {!question ? (
+        <Box>
+          <Heading>Beatles Album Game</Heading>
+        </Box>
+      ) : null}
 
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
+      {!user ? (
+        <SignIn 
+          formValues={formValues} 
+          handleFormChange={handleFormChange} 
+          handleFormSubmit={handleFormSubmit} 
         />
-      </div>
+      ) : (
+      <Box>
+        {loading ? (
+          <h1>...Loading</h1>
+        ) : null}
 
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
+        {question && guess === 'unset' ? (
+          <Question question={question} handleGuess={handleGuess} />
+        ) : null}
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
+        {guess === 'correct' && question != null ? (
+          <CorrectAnswer correctAnswer={question.correctAnswer} nextQuestion={nextQuestion} />
+        ) : null}
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore starter templates for Next.js.</p>
-        </a>
+        {guess === 'wrong' ? (
+          <WrongAnswer nextQuestion={nextQuestion} />
+        ) : null}
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  );
+        {gameOver? (
+          <Heading>Congratulations {user} You have won the game!</Heading>
+        ) : null}
+      </Box>
+      )}
+    </Page>
+  )
 }
