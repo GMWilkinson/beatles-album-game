@@ -30,15 +30,16 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 
 - The styling is just layout and mediaqueries with some basic styled components. Please don't judge based on how it looks
 - The question filtering etc would be better to be on the back-end
-  ```export const getCurrentQuestion = (albums: Album[], questionsAnswered: number[]): CurrentQuestion => {
-  const questionsWithAnsweredRemoved = albums.filter(album => !questionsAnswered.includes(album.cover_image_id))
-  const correctAnswer = getCorrectAnswer(questionsWithAnsweredRemoved)
-  const wrongAnswers = getWrongAnswers(albums, correctAnswer.cover_image_id)
-  return {
-    correctAnswer: correctAnswer,
-    wrongAnswers: wrongAnswers
+  ```
+  export const getCurrentQuestion = (albums: Album[], questionsAnswered: number[]): CurrentQuestion => {
+    const questionsWithAnsweredRemoved = albums.filter(album => !questionsAnswered.includes(album.cover_image_id))
+    const correctAnswer = getCorrectAnswer(questionsWithAnsweredRemoved)
+    const wrongAnswers = getWrongAnswers(albums, correctAnswer.cover_image_id)
+    return {
+      correctAnswer: correctAnswer,
+      wrongAnswers: wrongAnswers
+    }
   }
-}```
 
 - The file layout is not optimal
 - Needs more tests
