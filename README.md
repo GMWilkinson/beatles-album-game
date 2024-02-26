@@ -25,6 +25,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Things to note
 
+- I used prop drilling instead of global state management (redux etc) because The drilling is only one layer down.
 - The styling is just layout and mediaqueries with some basic styled components. Please don't judge based on how it looks
 - The question filtering etc would be better to be on the back-end
   ```
