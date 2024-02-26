@@ -40,3 +40,5 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 - The file layout is not optimal
 - Needs more tests
+- Needs some error handling
+- There is a console warning about using layout prop with next/image. I used it anyway but in future would use next/future/image
